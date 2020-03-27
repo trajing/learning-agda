@@ -1,2 +1,6 @@
+# Agda
 *.agdai
-*.agda~
+
+# Emacs
+*~
+\#*\#

@@ -1,7 +1,7 @@
 {-# OPTIONS --without-K #-}
 
 open import Agda.Primitive
-open import Function
+open import Function hiding (_⇔_)
 open import Relation.Binary.PropositionalEquality as ≡ using (_≡_ ; refl)
 open import Relation.Nullary
 open import Data.Empty
@@ -29,8 +29,8 @@ reverse-curry f pq = f (proj₁ pq) (proj₂ pq)
 negation-of-disjunction : {m n : Level} {P : Set m} {Q : Set n} → ¬ (P ⊎ Q) → ¬ P × ¬ Q
 negation-of-disjunction ¬p⊎q = (λ { p → ¬p⊎q $ inj₁ p}) , λ { q → ¬p⊎q $ inj₂ q }
 
---cast : {A : Set} {x y : A} {f : A → Set} → x ≡ y → f x → f y
---cast eq rewrite eq = id
+cast : ∀ {m n} → {A : Set m} {x y : A} {f : A → Set n} → x ≡ y → f x → f y
+cast eq rewrite eq = id
 
 record PartialOrder (A : Set) (_≤_ : A → A → Set) : Set where
   constructor pord-prf
@@ -38,4 +38,3 @@ record PartialOrder (A : Set) (_≤_ : A → A → Set) : Set where
     po-refl : (a : A) → a ≤ a
     antisym : (a b : A) → a ≤ b → b ≤ a → a ≡ b
     trans : (a b c : A) → a ≤ b → b ≤ c → a ≤ c
-    

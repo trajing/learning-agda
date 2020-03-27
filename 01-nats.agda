@@ -148,3 +148,66 @@ odd-2k+1 (S n) (S-even-odd e) = record { fst = fst ; snd = snd }
   fst = proj₁ hyp
   snd : 2 * fst + 1 ≡ S n
   snd rewrite ≡.sym $ +-associative fst fst 1 | +-commutative fst 1 | +-commutative' fst fst = ≡.cong S $ proj₂ hyp
+
+≈-id : (a b : ℕ) (p q : a ≈ b) → p ≡ q
+≈-id _ _ ≈-base ≈-base = refl
+≈-id (S a) (S b) (≈-succ p) (≈-succ q) rewrite ≈-id a b p q = refl
+
+0<x : (a : ℕ) → 0 < S a
+0<x 0 = <-base
+0<x (S x) = <-succ $ 0<x x
+
+lt-to-sum : (a b : ℕ) → a < b → ℕ
+lt-to-sum a b <-base = 1
+lt-to-sum a (S b) (<-succ p) = S $ lt-to-sum a b p
+
+lt-to-sum-sound : (a b : ℕ) (p : a < b) → a + (lt-to-sum a b p) ≡ b
+lt-to-sum-sound Z (S b) <-base = refl
+lt-to-sum-sound Z (S b) (<-succ p) rewrite lt-to-sum-sound Z b p = refl
+lt-to-sum-sound (S a) (S b) <-base rewrite +-commutative a 1 = refl
+lt-to-sum-sound (S a) (S b) (<-succ p) rewrite +-commutative' a (lt-to-sum (S a) b p) | lt-to-sum-sound (S a) b p = refl
+
+lt-to-sum-nonzero : (a b : ℕ) (p : a < b) → 0 < lt-to-sum a b p 
+lt-to-sum-nonzero a b <-base = <-base
+lt-to-sum-nonzero a b (<-succ p) = 0<x $ lt-to-sum a (lemma p) p
+  where
+  lemma : {n : ℕ} → a < n → ℕ
+  lemma {n} _ = n
+
+S-mono-inc : (a b : ℕ) → a < b → S a < S b
+S-mono-inc Z (S b) <-base = <-base
+S-mono-inc Z (S b) (<-succ p) = <-succ $ S-mono-inc Z b p
+S-mono-inc (S a) (S b) <-base = <-base
+S-mono-inc (S a) (S b) (<-succ p) = <-succ $ S-mono-inc (S a) b p
+
+lt-from-sum : (a b c : ℕ) → a + S c ≡ b → a < b
+lt-from-sum a b Z eq rewrite ≡.sym eq | +-commutative a 1 = <-base
+lt-from-sum Z (S b) (S c) eq = 0<x b
+lt-from-sum (S a) (S b) (S c) eq = S-mono-inc a b $ lt-from-sum a b (S c) $ S-cancellation (a + S (S c)) b eq
+
+lt-from-sum' : (a b c : ℕ) → 0 < c → a + c ≡ b → a < b
+lt-from-sum' a b (S c) _ eq = lt-from-sum a b c eq
+
+pred : (n : ℕ) → 0 < n → ℕ
+pred (S n) _ = n
+
+S-pred-inv : (n : ℕ) (p : 0 < n) → S (pred n p) ≡ n
+S-pred-inv (S n) p = refl
+
+<-trans : (a b c : ℕ) → a < b → b < c → a < c
+<-trans a b c p q = lt-from-sum' a c (j + k) 0<j+k a+j+k≡c
+  where
+  j = lt-to-sum a b p
+  k = lt-to-sum b c q
+  a+j≡b : a + j ≡ b
+  a+j≡b = lt-to-sum-sound a b p
+  b+k≡c : b + k ≡ c
+  b+k≡c = lt-to-sum-sound b c q
+  a+j+k≡c : a + (j + k) ≡ c
+  a+j+k≡c rewrite +-associative a j k | a+j≡b = b+k≡c
+  0<j = lt-to-sum-nonzero a b p
+  0<j+k : 0 < (j + k)
+  0<j+k rewrite ≡.sym $ S-pred-inv j 0<j = 0<x $ (pred j 0<j) + k
+
+<-irrefl : (a : ℕ) → ¬ (a < a)
+<-irrefl (S n) (<-succ p) = <-irrefl n (<-trans n (S n) n <-base p)
